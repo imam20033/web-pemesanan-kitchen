@@ -1,0 +1,79 @@
+/* Import Font yang mirip dengan desain */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+:root {
+    --primary-orange: #E65100;
+    --soft-orange: #FFF3E0;
+    --bg-cream: #FDF8F3;
+}
+
+body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background-color: var(--bg-cream);
+    color: #333;
+}
+
+/* Custom Utilities */
+.orange-bg { background-color: var(--primary-orange); }
+.orange-text { color: var(--primary-orange); }
+
+/* Membuat Card terasa lebih modern dan halus sesuai gambar */
+.custom-card {
+    background: white;
+    border-radius: 24px;
+    border: 1px solid rgba(0,0,0,0.05);
+    transition: all 0.3s ease;
+}
+
+.custom-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(230, 81, 0, 0.1);
+}
+
+/* Styling Scrollbar agar cantik */
+::-webkit-scrollbar {
+    width: 8px;
+}
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+::-webkit-scrollbar-thumb {
+    background: var(--primary-orange);
+    border-radius: 10px;
+}
+
+/* Animasi Button */
+button {
+    transition: all 0.2s active;
+}
+button:active {
+    transform: scale(0.95);
+}
+/* Animasi partikel terbang ke keranjang */
+.fly-item {
+    position: fixed;
+    z-index: 9999;
+    width: 20px;
+    height: 20px;
+    background-color: var(--primary-orange);
+    border-radius: 50%;
+    pointer-events: none;
+    transition: all 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* Efek tombol saat ditekan */
+.btn-click-effect {
+    transform: scale(0.9) !important;
+    background-color: #bf4300 !important;
+}
+
+/* Animasi bergoyang pada keranjang saat item masuk */
+@keyframes shake {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1) rotate(5deg); }
+    100% { transform: scale(1); }
+}
+
+.cart-bounce {
+    animation: shake 0.4s ease-in-out;
+}

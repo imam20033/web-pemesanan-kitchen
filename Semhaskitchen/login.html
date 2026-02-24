@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KITCHEN - Masuk Sistem</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #FDF8F3; }
+        .orange-bg { background-color: #E65100; }
+        .admin-btn { background-color: #1a1a1a !important; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-center items-center px-4">
+    
+    <div class="mb-10 text-center">
+        <div class="inline-block p-4 bg-white rounded-3xl shadow-sm mb-4">
+            <span class="text-4xl font-black text-orange-600 tracking-tighter">KITCHEN</span>
+        </div>
+        <p class="text-gray-500 font-medium">Portal akses terpadu untuk User & Admin</p>
+    </div>
+
+    <div class="bg-white p-8 md:p-12 rounded-[3rem] shadow-2xl shadow-orange-100/50 w-full max-w-md border border-gray-100">
+        <div class="mb-8">
+            <h2 class="text-3xl font-black text-gray-800">Selamat Datang</h2>
+            <p class="text-gray-400 text-sm mt-1">Silakan masukkan kredensial Anda</p>
+        </div>
+        
+        <form onsubmit="handleLogin(event)" class="space-y-6">
+            <div>
+                <label class="block text-xs font-bold uppercase tracking-widest mb-2 text-gray-400">Alamat Email</label>
+                <div class="relative group">
+                    <span class="absolute left-4 top-4 text-gray-400 group-focus-within:text-orange-500 transition-colors">✉️</span>
+                    <input type="email" id="l-email" required placeholder="admin@kitchen.com atau user@email.com" 
+                        class="w-full p-4 pl-12 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-4 ring-orange-500/10 focus:border-orange-500 outline-none transition-all">
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold uppercase tracking-widest mb-2 text-gray-400">Kata Sandi</label>
+                <div class="relative group">
+                    <span class="absolute left-4 top-4 text-gray-400 group-focus-within:text-orange-500 transition-colors">🔒</span>
+                    <input type="password" id="l-pass" required placeholder="••••••••" 
+                        class="w-full p-4 pl-12 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-4 ring-orange-500/10 focus:border-orange-500 outline-none transition-all">
+                </div>
+            </div>
+            
+            <button type="submit" id="btn-masuk" 
+                class="w-full orange-bg text-white py-5 rounded-[1.5rem] font-extrabold text-lg shadow-xl shadow-orange-200 hover:translate-y-[-2px] active:scale-95 transition-all duration-300">
+                Masuk ke Dashboard
+            </button>
+        </form>
+
+        <div id="login-footer" class="mt-8 pt-8 border-t border-gray-50 text-center">
+            <p class="text-sm text-gray-500">
+                Belum memiliki akun? 
+                <a href="daftar.html" class="text-orange-600 font-bold hover:underline underline-offset-4">Daftar Sekarang</a>
+            </p>
+        </div>
+    </div>
+    
+    <footer class="mt-12 text-gray-300 text-[10px] font-bold uppercase tracking-[0.3em]">
+        © 2026 KITCHEN Intelligence System
+    </footer>
+
+    <script>
+        // Kredensial Admin Tetap
+        const ADMIN_CREDENTIALS = {
+            email: "admin@kitchen.com",
+            pass: "admin123"
+        };
+
+        // Cek jika sudah login sebelumnya
+        window.onload = function() {
+            if (sessionStorage.getItem('isAdminLoggedIn') === 'true') {
+                window.location.href = 'admin-survey.html';
+            } else if (localStorage.getItem('isLoggedIn') === 'true') {
+                window.location.href = 'index.html';
+            }
+        }
+
+        function handleLogin(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('l-email').value;
+            const pass = document.getElementById('l-pass').value;
+            const btn = document.getElementById('btn-masuk');
+
+            // --- 1. LOGIKA LOGIN ADMIN ---
+            if (email === ADMIN_CREDENTIALS.email && pass === ADMIN_CREDENTIALS.pass) {
+                btn.innerHTML = `<span class="flex items-center justify-center gap-2">🔑 Membuka Admin Panel...</span>`;
+                btn.classList.add('admin-btn'); // Ubah warna jadi hitam
+                
+                setTimeout(() => {
+                    sessionStorage.setItem('isAdminLoggedIn', 'true');
+                    // Pastikan user biasa logout jika admin masuk
+                    localStorage.removeItem('isLoggedIn'); 
+                    window.location.href = 'admin-survey.html';
+                }, 1000);
+                return;
+            }
+
+            // --- 2. LOGIKA LOGIN USER ---
+            const savedUser = JSON.parse(localStorage.getItem('kitchenUser'));
+
+            if (savedUser && email === savedUser.email && pass === savedUser.pass) {
+                btn.innerHTML = `<span class="flex items-center justify-center gap-2">🍽️ Menyiapkan Dapur...</span>`;
+                btn.disabled = true;
+
+                setTimeout(() => {
+                    localStorage.setItem('isLoggedIn', 'true');
+                    localStorage.setItem('currentUser', savedUser.nama);
+                    // Pastikan admin logout jika user masuk
+                    sessionStorage.removeItem('isAdminLoggedIn');
+                    window.location.href = 'index.html';
+                }, 1000);
+            } else {
+                // Efek getar jika gagal
+                btn.innerHTML = "Akses Ditolak!";
+                btn.style.backgroundColor = "#ef4444";
+                setTimeout(() => {
+                    btn.innerHTML = "Masuk ke Dashboard";
+                    btn.style.backgroundColor = "";
+                    alert("Kredensial tidak valid. Periksa kembali email dan password Anda.");
+                }, 1500);
+            }
+        }
+    </script>
+</body>
+</html>

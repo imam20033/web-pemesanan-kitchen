@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nilai Pesanan - KITCHEN</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #FDF8F3; }
+        .orange-text { color: #E65100; }
+        .star { font-size: 2.5rem; cursor: pointer; color: #D1D5DB; transition: color 0.2s; }
+        .star.active { color: #FBBF24; } /* Warna Kuning Emas */
+    </style>
+</head>
+<body>
+    <nav class="bg-white px-12 py-4 flex justify-between items-center border-b shadow-sm">
+        <span class="text-2xl font-black orange-text">KITCHEN</span>
+        <a href="riwayat.html" class="text-sm font-bold text-gray-500 hover:text-orange-600">Batal</a>
+    </nav>
+
+    <main class="max-w-3xl mx-auto p-12">
+        <h1 class="text-3xl font-black mb-2">Nilai Pesanan Anda</h1>
+        <p class="text-gray-500 mb-10">Bagikan pengalaman Anda untuk membantu kami menjadi lebih baik.</p>
+
+        <div class="bg-white p-10 rounded-[2.5rem] border shadow-sm space-y-10">
+            <div class="bg-gray-50 p-8 rounded-3xl text-center">
+                <h3 class="font-bold text-lg mb-4 text-gray-700">Kepuasan Anda</h3>
+                <div class="flex justify-center gap-3" id="rating-container">
+                    <span class="star" onclick="setRating(1)">★</span>
+                    <span class="star" onclick="setRating(2)">★</span>
+                    <span class="star" onclick="setRating(3)">★</span>
+                    <span class="star" onclick="setRating(4)">★</span>
+                    <span class="star" onclick="setRating(5)">★</span>
+                </div>
+                <p id="rating-text" class="text-sm text-gray-400 mt-4 font-semibold">Pilih rating bintang</p>
+            </div>
+
+            <div>
+                <h3 class="font-bold mb-4 text-gray-700">Tulis Komentar</h3>
+                <textarea id="comment" placeholder="Apa yang Anda sukai dari menu ini?" 
+                    class="w-full p-6 bg-gray-50 border border-gray-100 rounded-3xl h-40 focus:ring-2 ring-orange-500 outline-none transition"></textarea>
+            </div>
+
+            <button onclick="submitReview()" class="w-full bg-orange-600 text-white py-4 rounded-2xl font-bold text-lg shadow-lg hover:bg-orange-700 transition transform active:scale-95">
+                Kirim Ulasan
+            </button>
+        </div>
+    </main>
+
+    <script>
+        let currentRating = 0;
+
+        // Fungsi untuk memilih bintang
+        function setRating(n) {
+            currentRating = n;
+            const stars = document.querySelectorAll('.star');
+            const text = document.getElementById('rating-text');
+            
+            stars.forEach((star, index) => {
+                if (index < n) {
+                    star.classList.add('active');
+                } else {
+                    star.classList.remove('active');
+                }
+            });
+
+            // Ubah teks keterangan berdasarkan jumlah bintang
+            const labels = ["Buruk", "Kurang", "Cukup", "Enak!", "Sangat Luar Biasa!"];
+            text.innerText = labels[n-1];
+            text.classList.remove('text-gray-400');
+            text.classList.add('text-orange-600');
+        }
+
+        // Fungsi kirim ulasan
+        function submitReview() {
+            if (currentRating === 0) {
+                alert("Mohon berikan rating bintang terlebih dahulu!");
+                return;
+            }
+
+            // Ganti tombol jadi loading
+            const btn = document.querySelector('button');
+            btn.innerHTML = "Mengirim...";
+            btn.disabled = true;
+
+            setTimeout(() => {
+                alert("Terima kasih! Ulasan Anda telah kami terima.");
+                window.location.href = 'riwayat.html'; // Kembali ke riwayat
+            }, 1000);
+        }
+    </script>
+</body>
+</html>

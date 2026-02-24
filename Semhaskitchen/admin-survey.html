@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KITCHEN - Admin SUS Analytics</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #F9FAFB; min-height: 100vh; }
+        .orange-gradient { background: linear-gradient(135deg, #FF8C00 0%, #E65100 100%); }
+        .glass-card { background: white; border: 1px solid #F1F5F9; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
+        .sticky-col { position: sticky; left: 0; background: white; z-index: 10; border-right: 1px solid #F1F5F9; }
+    </style>
+</head>
+<body onload="initAdmin()">
+
+    <div class="flex flex-col md:flex-row min-h-screen">
+        <aside class="w-full md:w-72 bg-white border-r border-gray-200 flex flex-col p-8 space-y-10 shadow-sm">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 orange-gradient rounded-xl flex items-center justify-center shadow-lg shadow-orange-200">
+                    <span class="text-white font-black text-xl">K</span>
+                </div>
+                <div>
+                    <h2 class="text-xl font-extrabold text-gray-800 tracking-tight text-orange-600">KITCHEN</h2>
+                    <p class="text-[10px] text-gray-400 font-bold tracking-widest uppercase">Admin Panel</p>
+                </div>
+            </div>
+
+            <nav class="flex-1 space-y-2">
+                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest px-4 mb-4">Internal Menu</p>
+                
+                <a href="#" class="flex items-center space-x-4 p-4 orange-gradient text-white rounded-2xl shadow-xl shadow-orange-100 font-bold transition-all">
+                    <span class="text-xl">📊</span> <span>Hasil Analisis</span>
+                </a>
+            </nav>
+
+            <div class="pt-6 border-t border-gray-100">
+                <button onclick="logoutAdmin()" class="w-full flex items-center space-x-4 p-4 text-red-500 hover:bg-red-50 rounded-2xl font-bold transition group">
+                    <span class="group-hover:translate-x-1 transition-transform text-xl">🚪</span> <span>Keluar Panel</span>
+                </button>
+            </div>
+        </aside>
+
+        <main class="flex-1 p-6 md:p-12 overflow-y-auto">
+            <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-4">
+                <div>
+                    <h1 class="text-4xl font-black text-gray-900 tracking-tight">Data <span class="text-orange-500">Analytics</span></h1>
+                    <p class="text-gray-500 mt-1 font-medium italic text-sm">Target: 30 Responden | CSV: survey_responses.csv</p>
+                </div>
+                <button onclick="loadSurveyData()" class="px-6 py-3 bg-gray-900 text-white rounded-xl font-bold text-sm hover:bg-black transition flex items-center gap-2 shadow-lg active:scale-95">
+                    <span>🔄</span> Sync Data Baru
+                </button>
+            </header>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+                <div class="glass-card p-8 rounded-[2.5rem]">
+                    <p class="text-gray-400 text-[10px] font-black uppercase tracking-widest mb-2">Total Responden</p>
+                    <h3 id="total-resp" class="text-5xl font-black text-gray-900">0</h3>
+                </div>
+                <div class="glass-card p-8 rounded-[2.5rem] border-l-8 border-l-orange-500">
+                    <p class="text-gray-400 text-[10px] font-black uppercase tracking-widest mb-2">Skor SUS (Avg)</p>
+                    <h3 id="avg-sus" class="text-5xl font-black text-gray-900">0.0</h3>
+                </div>
+                <div class="glass-card p-8 rounded-[2.5rem]">
+                    <p class="text-gray-400 text-[10px] font-black uppercase tracking-widest mb-2 text-blue-500">Adjective Rating</p>
+                    <h3 id="sat-rate" class="text-4xl font-black text-gray-800 uppercase tracking-tighter">-</h3>
+                </div>
+            </div>
+
+            <div class="glass-card rounded-[2.5rem] overflow-hidden bg-white">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-gray-50/50 text-[10px] font-bold text-gray-400 uppercase tracking-widest border-b">
+                                <th class="p-6 sticky-col">ID Responden</th>
+                                <th class="p-6 text-center border-r">Sum (Q1-Q10)</th>
+                                <th class="p-6 text-center font-black text-orange-600">SUS Score (x 2.5)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="survey-table-body" class="text-sm font-semibold text-gray-600 divide-y divide-gray-100"></tbody>
+                        <tfoot id="survey-table-foot" class="text-sm font-bold border-t-2 border-gray-100"></tfoot>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        function initAdmin() {
+            if (sessionStorage.getItem('isAdminLoggedIn') !== 'true') {
+                window.location.href = 'login.html';
+            } else {
+                loadSurveyData();
+            }
+        }
+
+        async function loadSurveyData() {
+            const fileName = 'survey_responses.csv'; 
+            const tableBody = document.getElementById('survey-table-body');
+            const tableFoot = document.getElementById('survey-table-foot');
+            
+            try {
+                // Cache buster untuk memastikan data terbaru terambil
+                const response = await fetch(`${fileName}?t=${new Date().getTime()}`);
+                const text = await response.text();
+                
+                const rows = text.trim().split(/\r?\n/).filter(line => line.trim().length > 0);
+                const dataRows = rows.slice(1); 
+                
+                let grandTotalHasil = 0;
+                let totalResp = dataRows.length;
+                tableBody.innerHTML = '';
+
+                dataRows.forEach((row, index) => {
+                    const cols = row.split(/[,;]/).map(c => c.trim().replace(/"/g, ''));
+                    if (cols.length >= 11) {
+                        let totalRow = 0;
+                        for (let i = 1; i <= 10; i++) {
+                            totalRow += parseFloat(cols[i]) || 0;
+                        }
+                        const finalScore = totalRow * 2.5;
+                        grandTotalHasil += totalRow;
+
+                        tableBody.innerHTML += `
+                            <tr class="hover:bg-orange-50/20 transition-colors">
+                                <td class="p-6 sticky-col font-black text-gray-900">R-${index + 1}</td>
+                                <td class="p-6 text-center border-r font-medium">${totalRow}</td>
+                                <td class="p-6 text-center font-extrabold text-gray-800">${finalScore.toFixed(1)}</td>
+                            </tr>`;
+                    }
+                });
+
+                const rataRataHasil = (grandTotalHasil / totalResp).toFixed(2);
+                const skorAkhirSUS = (rataRataHasil * 2.5).toFixed(1);
+
+                document.getElementById('total-resp').innerText = totalResp;
+                document.getElementById('avg-sus').innerText = skorAkhirSUS;
+                
+                // Klasifikasi Skor SUS
+                let grade = "POOR";
+                if(skorAkhirSUS >= 80.3) grade = "EXCELLENT";
+                else if(skorAkhirSUS >= 68) grade = "GOOD";
+                else if(skorAkhirSUS >= 51) grade = "OKAY";
+                document.getElementById('sat-rate').innerText = grade;
+
+                tableFoot.innerHTML = `
+                    <tr class="bg-gray-50 text-gray-800 font-bold">
+                        <td class="p-6 sticky-col bg-gray-50 uppercase text-[10px] tracking-widest">Total Akumulasi</td>
+                        <td class="p-6 text-center border-r font-black text-orange-600">${grandTotalHasil}</td>
+                        <td class="p-6"></td>
+                    </tr>
+                    <tr class="bg-gray-900 text-white">
+                        <td class="p-6 sticky-col bg-gray-900 uppercase text-[10px] tracking-widest">Rata-rata Perhitungan</td>
+                        <td class="p-6 text-center border-r text-xs font-medium">${grandTotalHasil} ÷ ${totalResp} = ${rataRataHasil}</td>
+                        <td class="p-6 text-center text-orange-400 font-black text-xl italic underline decoration-orange-500 underline-offset-8">SCORE: ${skorAkhirSUS}</td>
+                    </tr>`;
+
+            } catch (err) {
+                console.error("Fetch Error:", err);
+                tableBody.innerHTML = `<tr><td colspan="3" class="p-20 text-center text-red-500 font-bold">⚠️ Gagal membaca survey_responses.csv. Harap jalankan menggunakan Live Server.</td></tr>`;
+            }
+        }
+
+        function logoutAdmin() {
+            sessionStorage.removeItem('isAdminLoggedIn');
+            window.location.href = 'login.html';
+        }
+    </script>
+</body>
+</html>

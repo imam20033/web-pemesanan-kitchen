@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KITCHEN - Checkout</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #FDF8F3; }
+        .orange-bg { background-color: #E65100; }
+        .orange-text { color: #E65100; }
+        .scale-in { animation: scaleIn 0.3s ease-out forwards; }
+        @keyframes scaleIn {
+            0% { transform: scale(0.9); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        #voucher-list::-webkit-scrollbar { width: 4px; }
+        #voucher-list::-webkit-scrollbar-thumb { background: #E65100; border-radius: 10px; }
+    </style>
+</head>
+<body onload="initCheckout()">
+    <nav class="bg-white px-12 py-4 flex justify-between items-center border-b sticky top-0 z-50">
+        <span class="text-2xl font-black orange-text">KITCHEN</span>
+    </nav>
+
+    <main class="max-w-6xl mx-auto p-8 md:p-12">
+        <a href="index.html" class="orange-text font-semibold flex items-center gap-2 mb-8 hover:underline">← Kembali ke Menu</a>
+        
+        <h1 class="text-4xl font-black mb-8 text-gray-800">Checkout</h1>
+
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-12">
+            <div class="md:col-span-7 bg-white p-8 rounded-[2.5rem] border shadow-sm h-fit">
+                <h2 class="text-xl font-bold mb-8 flex items-center gap-3 text-gray-800">📍 Informasi Pengiriman</h2>
+                
+                <div class="space-y-6">
+                    <div class="flex items-center gap-4 p-4 bg-orange-50 rounded-2xl border border-orange-100">
+                        <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center text-xl shadow-sm">👤</div>
+                        <div>
+                            <p class="text-[10px] text-orange-600 font-black uppercase tracking-widest">Penerima Sesuai Profil</p>
+                            <p id="nama-penerima" class="font-bold text-lg text-gray-800 leading-tight">Memuat nama...</p>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-bold mb-2 text-gray-600">Alamat Lengkap</label>
+                        <textarea id="cust-address" class="w-full p-4 bg-gray-50 border border-gray-100 rounded-2xl h-24 focus:ring-2 ring-orange-500 outline-none transition" placeholder="Contoh: Jl. Sudirman No. 123, Jakarta"></textarea>
+                    </div>
+                </div>
+
+                <h2 class="text-xl font-bold mt-12 mb-6 text-gray-800">🚚 Opsi Pengiriman</h2>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <label onclick="updateShipping(5000)" class="flex flex-col p-4 border-2 border-orange-500 rounded-2xl bg-orange-50 cursor-pointer transition shipping-option">
+                        <div class="flex justify-between mb-2">
+                            <span class="font-bold">Standard</span>
+                            <input type="radio" name="delivery" checked class="accent-orange-600 w-4 h-4">
+                        </div>
+                        <span class="text-sm text-gray-500 italic">1-2 Jam</span>
+                        <span class="mt-2 font-black orange-text">Rp 5.000</span>
+                    </label>
+                    <label onclick="updateShipping(15000)" class="flex flex-col p-4 border-2 border-gray-100 rounded-2xl bg-white cursor-pointer hover:border-orange-200 transition shipping-option">
+                        <div class="flex justify-between mb-2">
+                            <span class="font-bold">Express</span>
+                            <input type="radio" name="delivery" class="accent-orange-600 w-4 h-4">
+                        </div>
+                        <span class="text-sm text-gray-500 italic">30 Menit</span>
+                        <span class="mt-2 font-black orange-text">Rp 15.000</span>
+                    </label>
+                </div>
+
+                <div class="mt-8 p-4 bg-yellow-50 border border-yellow-100 rounded-2xl flex items-center gap-4">
+                    <span class="text-2xl">🪙</span>
+                    <p class="text-sm font-bold text-yellow-800">Kamu akan mendapatkan <span id="estimated-points" class="text-orange-600">0</span> poin dari pesanan ini!</p>
+                </div>
+
+                <button onclick="prosesPesanan()" id="btn-bayar" class="w-full orange-bg text-white py-5 rounded-[2rem] font-bold mt-8 shadow-lg hover:bg-orange-700 transition active:scale-[0.98]">
+                    Konfirmasi & Bayar Sekarang
+                </button>
+            </div>
+
+            <div class="md:col-span-5 space-y-6">
+                <div class="bg-white p-8 rounded-[2.5rem] border shadow-sm">
+                    <h2 class="text-xl font-bold mb-4 text-gray-800 flex items-center gap-2">🎟️ Voucer Saya</h2>
+                    <div id="voucher-list" class="space-y-3 max-h-48 overflow-y-auto pr-2">
+                        <p class="text-sm text-gray-400">Belum ada voucer tersedia.</p>
+                    </div>
+                    <div id="active-voucher-box" class="hidden mt-4 p-4 bg-green-50 border border-green-200 rounded-2xl flex justify-between items-center">
+                        <div>
+                            <p id="active-voucher-name" class="text-sm font-bold text-green-700"></p>
+                            <p class="text-[10px] text-green-600">Voucer Berhasil Dipasang!</p>
+                        </div>
+                        <button onclick="removeVoucher()" class="text-red-500 font-bold text-xs hover:underline">Batal</button>
+                    </div>
+                </div>
+
+                <div class="bg-white p-8 rounded-[2.5rem] border shadow-sm sticky top-24">
+                    <h2 class="text-xl font-bold mb-6 text-gray-800">Ringkasan Pesanan</h2>
+                    <div id="checkout-items" class="space-y-4 mb-8"></div>
+                    
+                    <div class="space-y-3 border-t pt-6">
+                        <div class="flex justify-between text-gray-500 font-medium text-sm">
+                            <span>Subtotal</span>
+                            <span id="subtotal" class="text-gray-800 font-bold">Rp 0</span>
+                        </div>
+                        <div class="flex justify-between text-gray-500 font-medium text-sm">
+                            <span>Biaya Kirim</span>
+                            <span id="shipping-cost" class="text-gray-800 font-bold">Rp 5.000</span>
+                        </div>
+                        <div id="row-discount" class="hidden flex justify-between text-green-600 font-medium text-sm">
+                            <span>Diskon Voucer</span>
+                            <span id="discount-amount" class="font-bold">-Rp 0</span>
+                        </div>
+                        <div class="flex justify-between items-end pt-4 border-t">
+                            <span class="text-gray-400 font-bold">Total Akhir</span>
+                            <span id="total-final" class="text-3xl font-black orange-text">Rp 0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div id="modal-sukses" class="fixed inset-0 bg-black/60 z-[100] hidden items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-[3rem] p-10 max-w-sm w-full text-center scale-in">
+            <div class="w-24 h-24 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-5xl mx-auto mb-6">🎉</div>
+            <h2 class="text-2xl font-black mb-2 text-gray-800">Berhasil Dipesan!</h2>
+            <p id="p-poin-notif" class="text-gray-500 mb-8">Poin telah ditambahkan ke profilmu.</p>
+            <button onclick="window.location.href='riwayat.html'" class="w-full orange-bg text-white py-4 rounded-2xl font-bold hover:bg-orange-700 transition">Lihat Riwayat</button>
+        </div>
+    </div>
+
+    <script>
+        let subtotal = 0;
+        let shipping = 5000;
+        let discount = 0;
+        let selectedVoucherId = null;
+
+        function initCheckout() {
+            const isLoggedIn = localStorage.getItem('isLoggedIn');
+            const user = JSON.parse(localStorage.getItem('kitchenUser'));
+
+            if(isLoggedIn !== 'true' || !user) {
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            // 1. Tampilkan Nama
+            document.getElementById('nama-penerima').innerText = user.nama;
+            
+            // 2. OTOMATIS ISI ALAMAT DARI PROFIL
+            if(user.alamat) {
+                document.getElementById('cust-address').value = user.alamat;
+            }
+
+            loadCheckoutData();
+            renderVouchers();
+        }
+
+        // --- Logika Pendukung ---
+        function loadCheckoutData() {
+            const container = document.getElementById('checkout-items');
+            const cart = JSON.parse(localStorage.getItem('kitchenCart')) || [];
+            if (cart.length === 0) { window.location.href = 'index.html'; return; }
+
+            container.innerHTML = '';
+            subtotal = 0;
+            let totalQty = 0;
+
+            cart.forEach(item => {
+                const itemTotal = item.price * item.qty;
+                subtotal += itemTotal;
+                totalQty += parseInt(item.qty);
+                container.innerHTML += `
+                    <div class="flex justify-between items-start">
+                        <span class="font-bold text-gray-700 text-sm">${item.name} <span class="text-orange-600">x${item.qty}</span></span>
+                        <span class="font-bold text-gray-800 text-sm">Rp ${itemTotal.toLocaleString('id-ID')}</span>
+                    </div>
+                `;
+            });
+
+            document.getElementById('estimated-points').innerText = totalQty * 10;
+            document.getElementById('subtotal').innerText = "Rp " + subtotal.toLocaleString('id-ID');
+            updateFinalTotal();
+        }
+
+        function updateFinalTotal() {
+            let total = (subtotal + shipping) - discount;
+            document.getElementById('total-final').innerText = "Rp " + Math.max(0, total).toLocaleString('id-ID');
+        }
+
+        function updateShipping(cost) {
+            shipping = cost;
+            document.getElementById('shipping-cost').innerText = "Rp " + cost.toLocaleString('id-ID');
+            document.querySelectorAll('.shipping-option').forEach(l => {
+                l.classList.remove('border-orange-500', 'bg-orange-50');
+                l.classList.add('border-gray-100', 'bg-white');
+            });
+            event.currentTarget.classList.remove('border-gray-100', 'bg-white');
+            event.currentTarget.classList.add('border-orange-500', 'bg-orange-50');
+            updateFinalTotal();
+        }
+
+        // --- LOGIKA UTAMA PROSES PESANAN ---
+        function prosesPesanan() {
+            const addressInput = document.getElementById('cust-address').value;
+            if(!addressInput) return alert("Mohon isi alamat pengiriman!");
+
+            const user = JSON.parse(localStorage.getItem('kitchenUser'));
+            
+            // 1. CEK PERUBAHAN ALAMAT
+            if(addressInput !== user.alamat) {
+                const updateAlamat = confirm("Alamat berbeda dengan profil. Simpan sebagai alamat utama?");
+                if(updateAlamat) {
+                    user.alamat = addressInput;
+                    // Langsung simpan ke localStorage agar sinkron
+                    localStorage.setItem('kitchenUser', JSON.stringify(user));
+                }
+            }
+
+            const btn = document.getElementById('btn-bayar');
+            btn.innerHTML = `<span class="animate-pulse">Memproses...</span>`;
+            btn.disabled = true;
+
+            const cart = JSON.parse(localStorage.getItem('kitchenCart'));
+            
+            // Hitung Poin
+            let totalQty = 0;
+            cart.forEach(item => totalQty += parseInt(item.qty));
+            const earnedPoints = totalQty * 10;
+
+            const newOrder = {
+                id: "ORD-" + Date.now(),
+                items_detail: cart,
+                total: (subtotal + shipping) - discount,
+                earnedPoints: earnedPoints, 
+                date: new Date().toLocaleDateString('id-ID'),
+                status: 'Selesai',
+                customer: user.nama,
+                alamat_kirim: addressInput // Simpan alamat spesifik di riwayat pesanan
+            };
+
+            // Simpan Riwayat & Poin
+            const history = JSON.parse(localStorage.getItem('kitchenHistory')) || [];
+            history.unshift(newOrder);
+            localStorage.setItem('kitchenHistory', JSON.stringify(history));
+
+            user.poin = (user.poin || 0) + earnedPoints;
+            localStorage.setItem('kitchenUser', JSON.stringify(user));
+
+            // Hapus Voucher jika dipakai
+            if (selectedVoucherId) {
+                let vouchers = JSON.parse(localStorage.getItem('kitchenVouchers')) || [];
+                vouchers = vouchers.filter(v => v.id !== selectedVoucherId);
+                localStorage.setItem('kitchenVouchers', JSON.stringify(vouchers));
+            }
+
+            // Selesai
+            setTimeout(() => {
+                localStorage.removeItem('kitchenCart');
+                document.getElementById('p-poin-notif').innerText = `Pesanan dikirim ke: ${addressInput}. Kamu dapat ${earnedPoints} poin!`;
+                document.getElementById('modal-sukses').classList.replace('hidden', 'flex');
+            }, 1200);
+        }
+
+        // Fungsi Voucher (Sederhana)
+        function renderVouchers() {
+            const list = document.getElementById('voucher-list');
+            const vouchers = JSON.parse(localStorage.getItem('kitchenVouchers')) || [];
+            if(vouchers.length > 0) {
+                list.innerHTML = '';
+                vouchers.forEach(v => {
+                    list.innerHTML += `
+                        <div onclick="applyVoucher('${v.id}', ${v.discount}, '${v.name}')" class="p-4 border rounded-2xl bg-gray-50 cursor-pointer hover:border-orange-500 transition flex justify-between">
+                            <span>${v.name}</span>
+                            <span class="orange-text font-bold">Pakai</span>
+                        </div>`;
+                });
+            }
+        }
+
+        function applyVoucher(id, amt, name) {
+            discount = amt; selectedVoucherId = id;
+            document.getElementById('row-discount').classList.remove('hidden');
+            document.getElementById('discount-amount').innerText = "-Rp " + amt.toLocaleString('id-ID');
+            document.getElementById('active-voucher-box').classList.remove('hidden');
+            document.getElementById('active-voucher-name').innerText = name;
+            updateFinalTotal();
+        }
+
+        function removeVoucher() {
+            discount = 0; selectedVoucherId = null;
+            document.getElementById('row-discount').classList.add('hidden');
+            document.getElementById('active-voucher-box').classList.add('hidden');
+            updateFinalTotal();
+        }
+    </script>
+</body>
+</html>

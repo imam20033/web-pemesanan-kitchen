@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KITCHEN - Pesan Sekarang</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #FDF8F3; color: #333; }
+        .orange-bg { background-color: #E65100; }
+        .orange-text { color: #E65100; }
+        .card-shadow { box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
+        
+        .fly-item {
+            position: fixed;
+            z-index: 9999;
+            width: 20px;
+            height: 20px;
+            background-color: #E65100;
+            border-radius: 50%;
+            pointer-events: none;
+            transition: all 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        .cart-bounce { animation: shake 0.4s ease-in-out; }
+        #cart-items::-webkit-scrollbar { width: 4px; }
+        #cart-items::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+    </style>
+</head>
+<body onload="initApp()">
+    <nav class="bg-white px-12 py-4 flex justify-between items-center sticky top-0 z-50 border-b">
+        <span class="text-2xl font-black orange-text tracking-tighter">KITCHEN</span>
+        <div class="flex items-center gap-6 text-sm font-bold">
+            <a href="profil.html" class="hover:text-orange-600 transition flex items-center gap-2">
+                👤 <span id="nav-user-name">Profil</span>
+            </a>
+            <a href="riwayat.html" class="hover:text-orange-600 transition flex items-center gap-2">
+                📋 Pesanan
+            </a>
+            <button onclick="handleLogout()" class="text-red-500 hover:text-red-700 transition">Keluar</button>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto px-12 py-10 grid grid-cols-12 gap-8">
+        <aside class="col-span-2">
+            <h2 class="font-bold text-lg mb-6">Kategori</h2>
+            <nav class="space-y-3">
+                <div onclick="filterMenu('Semua')" class="category-btn orange-bg text-white p-3 rounded-xl cursor-pointer shadow-md transition font-bold">🍴 Semua Menu</div>
+                <div onclick="filterMenu('Makanan Utama')" class="category-btn bg-white p-3 rounded-xl border hover:border-orange-500 transition cursor-pointer text-gray-600 font-medium">🍲 Utama</div>
+                <div onclick="filterMenu('Minuman')" class="category-btn bg-white p-3 rounded-xl border hover:border-orange-500 transition cursor-pointer text-gray-600 font-medium">🥤 Minuman</div>
+                <div onclick="filterMenu('Camilan')" class="category-btn bg-white p-3 rounded-xl border hover:border-orange-500 transition cursor-pointer text-gray-600 font-medium">🍟 Camilan</div>
+            </nav>
+        </aside>
+
+        <section class="col-span-7">
+            <h1 class="text-4xl font-extrabold mb-2">Pesan Sekarang</h1>
+            <p class="text-gray-500 mb-10">Pilih menu favoritmu dan nikmati hidangan lezat kami.</p>
+            <div id="menu-container" class="grid grid-cols-2 gap-8">
+                </div>
+        </section>
+
+        <aside class="col-span-3">
+            <div class="bg-white p-6 rounded-3xl card-shadow border sticky top-24">
+                <h2 id="cart-title" class="font-bold text-xl mb-6 flex items-center gap-2">🛒 Keranjang</h2>
+                <div id="cart-items" class="space-y-4 mb-8 max-h-80 overflow-y-auto pr-2"></div>
+                
+                <div class="bg-orange-50 p-4 rounded-2xl mb-6 text-center border border-orange-100">
+                    <p class="text-[10px] text-orange-800 uppercase font-black tracking-widest mb-1">Total Bayar</p>
+                    <p class="text-2xl font-black text-orange-600" id="total-price">Rp 0</p>
+                </div>
+                
+                <button onclick="goToCheckout()" class="w-full orange-bg text-white py-4 rounded-2xl font-bold text-lg hover:shadow-lg transition transform active:scale-95">
+                    Lanjut Checkout
+                </button>
+            </div>
+        </aside>
+    </main>
+
+    <script>
+        // 1. CEK PROTEKSI LOGIN
+        if (localStorage.getItem('isLoggedIn') !== 'true') {
+            window.location.href = 'login.html';
+        }
+
+        const menuData = [
+            { id: 1, name: 'Nasi Goreng Spesial', price: 45000, image: 'https://images.unsplash.com/photo-1603133872878-684f208fb84b?auto=format&fit=crop&w=500', category: 'Makanan Utama' },
+            { id: 2, name: 'Mie Aceh Goreng', price: 38000, image: 'https://images.unsplash.com/photo-1585032226651-759b368d7246?auto=format&fit=crop&w=500', category: 'Makanan Utama' },
+            { id: 3, name: 'Sate Ayam Madura', price: 45000, image: 'https://th.bing.com/th/id/OIP.WDTeCiTtxCJVO7mpAVpfOQHaE8?w=286&h=191&c=7&r=0&o=7&dpr=1.3&pid=1.7&rm=3', category: 'Makanan Utama' },
+            { id: 4, name: 'Pisang Goreng Keju', price: 20000, image: 'https://www.bing.com/th/id/OIP.6DY1G8m6o0PV28iN2RowMgHaE7?w=245&h=211&c=8&rs=1&qlt=90&o=6&dpr=1.3&pid=3.1&rm=2', category: 'Camilan' },
+            { id: 5, name: 'Es Teh Manis', price: 8000, image: 'https://images.unsplash.com/photo-1556679343-c7306c1976bc?auto=format&fit=crop&w=400', category: 'Minuman' },
+            { id: 6, name: 'Kopi Susu Gula Aren', price: 18000, image: 'https://bing.com/th?id=OSK.eb32175db046068c47fc08420db6c463', category: 'Minuman' },
+            { id: 7, name: 'Kentang Goreng', price: 15000, image: 'https://images.unsplash.com/photo-1573080496219-bb080dd4f877?auto=format&fit=crop&w=500', category: 'Camilan' }
+        ];
+
+        let cartData = [];
+
+        function initApp() {
+            // Tampilkan nama user di Navigasi
+            const currentName = localStorage.getItem('currentUser');
+            if(currentName) document.getElementById('nav-user-name').innerText = currentName;
+
+            renderMenu('Semua');
+            initCart();
+        }
+
+        function renderMenu(filter) {
+            const container = document.getElementById('menu-container');
+            const filtered = filter === 'Semua' ? menuData : menuData.filter(m => m.category === filter);
+            
+            container.innerHTML = filtered.map(item => `
+                <div class="bg-white rounded-3xl overflow-hidden card-shadow border group">
+                    <div class="overflow-hidden h-48">
+                        <img src="${item.image}" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
+                    </div>
+                    <div class="p-5">
+                        <span class="text-[10px] font-black orange-text uppercase tracking-widest">${item.category}</span>
+                        <h3 class="font-bold text-lg mb-4 text-gray-800">${item.name}</h3>
+                        <div class="flex justify-between items-center">
+                            <span class="font-black text-orange-600 text-lg">Rp ${item.price.toLocaleString()}</span>
+                            <button onclick="addToCart(this, ${item.id})" class="bg-orange-600 text-white px-4 py-2 rounded-xl font-bold hover:bg-orange-700 transition shadow-md text-sm">Tambah</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function filterMenu(cat) {
+            renderMenu(cat);
+            document.querySelectorAll('.category-btn').forEach(btn => {
+                btn.classList.remove('orange-bg', 'text-white', 'shadow-md', 'font-bold');
+                btn.classList.add('bg-white', 'text-gray-600', 'font-medium');
+            });
+            event.currentTarget.classList.add('orange-bg', 'text-white', 'shadow-md', 'font-bold');
+            event.currentTarget.classList.remove('bg-white', 'text-gray-600', 'font-medium');
+        }
+
+        function initCart() {
+            const saved = localStorage.getItem('kitchenCart');
+            if(saved) {
+                cartData = JSON.parse(saved);
+                renderCart();
+            }
+        }
+
+        function addToCart(btn, id) {
+            const item = menuData.find(m => m.id === id);
+            const existing = cartData.find(i => i.name === item.name);
+            
+            if(existing) {
+                existing.qty++;
+            } else {
+                cartData.push({
+                    name: item.name,
+                    price: item.price,
+                    category: item.category, 
+                    qty: 1
+                });
+            }
+            
+            localStorage.setItem('kitchenCart', JSON.stringify(cartData));
+            runFlyAnimation(btn);
+            renderCart();
+        }
+
+        function renderCart() {
+            const container = document.getElementById('cart-items');
+            const totalEl = document.getElementById('total-price');
+            
+            if(cartData.length === 0) {
+                container.innerHTML = `<p class="text-center text-gray-400 text-sm py-4">Belum ada menu dipilih</p>`;
+                totalEl.innerText = "Rp 0";
+                return;
+            }
+
+            let total = 0;
+            container.innerHTML = cartData.map((item, index) => {
+                total += (item.price * item.qty);
+                const labelColor = item.category === 'Minuman' ? 'text-blue-500' : (item.category === 'Camilan' ? 'text-purple-500' : 'text-orange-500');
+                
+                return `
+                    <div class="flex justify-between items-center border-b pb-3 border-gray-50">
+                        <div>
+                            <p class="font-bold text-xs">${item.name}</p>
+                            <p class="text-[8px] font-black uppercase ${labelColor}">${item.category}</p>
+                            <p class="text-xs text-orange-600 font-bold">Rp ${item.price.toLocaleString()}</p>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button onclick="changeQty(${index}, -1)" class="w-5 h-5 border rounded-lg text-orange-600 font-bold hover:bg-orange-50 text-xs">-</button>
+                            <span class="text-xs font-bold">${item.qty}</span>
+                            <button onclick="changeQty(${index}, 1)" class="w-5 h-5 border rounded-lg text-orange-600 font-bold hover:bg-orange-50 text-xs">+</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            totalEl.innerText = "Rp " + total.toLocaleString();
+        }
+
+        function changeQty(index, delta) {
+            cartData[index].qty += delta;
+            if(cartData[index].qty <= 0) cartData.splice(index, 1);
+            localStorage.setItem('kitchenCart', JSON.stringify(cartData));
+            renderCart();
+        }
+
+        function goToCheckout() {
+            if(cartData.length === 0) return alert("Pilih menu dulu ya!");
+            window.location.href = 'checkout.html';
+        }
+
+        function handleLogout() {
+            if(confirm('Apakah Anda ingin keluar?')) {
+                localStorage.removeItem('isLoggedIn');
+                localStorage.removeItem('currentUser');
+                localStorage.removeItem('kitchenCart'); // Hapus keranjang saat logout
+                window.location.href = 'login.html';
+            }
+        }
+
+        function runFlyAnimation(btn) {
+            const cartIcon = document.getElementById('cart-title');
+            const btnRect = btn.getBoundingClientRect();
+            const cartRect = cartIcon.getBoundingClientRect();
+            const flyer = document.createElement('div');
+            flyer.className = 'fly-item'; 
+            flyer.style.left = (btnRect.left + btnRect.width/2) + 'px';
+            flyer.style.top = (btnRect.top + btnRect.height/2) + 'px';
+            document.body.appendChild(flyer);
+
+            setTimeout(() => {
+                flyer.style.left = (cartRect.left + 20) + 'px';
+                flyer.style.top = (cartRect.top + 20) + 'px';
+                flyer.style.opacity = '0';
+                flyer.style.transform = 'scale(0.2)';
+            }, 50);
+
+            setTimeout(() => {
+                flyer.remove();
+                cartIcon.classList.add('cart-bounce');
+                setTimeout(() => cartIcon.classList.remove('cart-bounce'), 400);
+            }, 800);
+        }
+    </script>
+</body>
+</html>

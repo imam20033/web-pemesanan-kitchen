@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KITCHEN - Beri Masukan</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { background-color: #FDF8F3; font-family: 'Plus Jakarta Sans', sans-serif; }
+        .orange-text { color: #E65100; }
+        .orange-bg { background-color: #E65100; }
+        .star-rating { direction: rtl; display: inline-flex; }
+        .star-rating input { display: none; }
+        .star-rating label { color: #ddd; font-size: 2.5rem; padding: 0 0.2rem; cursor: pointer; transition: 0.2s; }
+        .star-rating label:hover,
+        .star-rating label:hover ~ label,
+        .star-rating input:checked ~ label { color: #E65100; transform: scale(1.1); }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+
+    <div class="bg-white p-8 md:p-12 rounded-[3rem] shadow-xl w-full max-w-xl border border-gray-100 text-center">
+        <div class="mb-8">
+            <span class="text-3xl font-black orange-text">KITCHEN</span>
+            <h1 class="text-2xl font-bold text-gray-800 mt-4">Bagaimana Pengalamanmu?</h1>
+            <p class="text-gray-500 mt-2 text-sm">Masukanmu sangat berarti untuk membantu kami menyajikan hidangan yang lebih lezat!</p>
+        </div>
+
+        <form id="survey-form" class="space-y-8 text-left">
+            <div class="text-center">
+                <label class="block text-sm font-bold text-gray-600 mb-2 uppercase tracking-widest">Berikan Rating</label>
+                <div class="star-rating">
+                    <input type="radio" id="star5" name="rating" value="5" required/><label for="star5">★</label>
+                    <input type="radio" id="star4" name="rating" value="4"/><label for="star4">★</label>
+                    <input type="radio" id="star3" name="rating" value="3"/><label for="star3">★</label>
+                    <input type="radio" id="star2" name="rating" value="2"/><label for="star2">★</label>
+                    <input type="radio" id="star1" name="rating" value="1"/><label for="star1">★</label>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 gap-6">
+                <div>
+                    <label class="block text-sm font-bold text-gray-600 mb-2">Ceritakan Pengalamanmu</label>
+                    <textarea id="survey-comment" placeholder="Rasa makanannya, kecepatan pengiriman, atau keramahan kurir..." 
+                        class="w-full p-4 bg-gray-50 border border-gray-100 rounded-2xl h-32 focus:ring-2 ring-orange-500 outline-none transition resize-none"></textarea>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-bold text-gray-600 mb-2">Ada menu yang kamu inginkan di KITCHEN?</label>
+                    <input type="text" id="menu-suggestion" placeholder="Contoh: Ramen Pedas, Steak Ayam..." 
+                        class="w-full p-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 ring-orange-500 outline-none transition">
+                </div>
+            </div>
+
+            <button type="button" onclick="kirimSurvei()" id="btn-submit"
+                class="w-full orange-bg text-white py-5 rounded-[2rem] font-bold text-lg shadow-lg hover:bg-orange-700 transition transform active:scale-95 flex items-center justify-center gap-2">
+                Kirim Masukan 🚀
+            </button>
+        </form>
+    </div>
+
+    <div id="modal-thanks" class="fixed inset-0 bg-black/60 z-[100] hidden items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-[3rem] p-10 max-w-sm w-full text-center animate-bounce-short">
+            <div class="w-24 h-24 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center text-5xl mx-auto mb-6">💖</div>
+            <h2 class="text-2xl font-black mb-2 text-gray-800">Terima Kasih!</h2>
+            <p class="text-gray-500 mb-8">Masukanmu sudah kami terima. Terus nikmati hidangan terbaik dari KITCHEN!</p>
+            <button onclick="window.location.href='index.html'" class="w-full orange-bg text-white py-4 rounded-2xl font-bold hover:bg-orange-700 transition">Kembali Beranda</button>
+        </div>
+    </div>
+
+    <script>
+        function kirimSurvei() {
+            // Cek Login
+            const user = JSON.parse(localStorage.getItem('kitchenUser'));
+            if (!user) {
+                alert("Silakan login terlebih dahulu untuk memberikan masukan.");
+                window.location.href = 'login.html';
+                return;
+            }
+
+            // Ambil Data
+            const rating = document.querySelector('input[name="rating"]:checked');
+            const komentar = document.getElementById('survey-comment').value;
+            const menuSaran = document.getElementById('menu-suggestion').value;
+
+            if (!rating) {
+                alert("Mohon berikan rating bintang!");
+                return;
+            }
+
+            const btn = document.getElementById('btn-submit');
+            btn.innerHTML = `<span class="animate-spin text-2xl">⏳</span> Memproses...`;
+            btn.disabled = true;
+
+            // Simpan ke LocalStorage
+            const surveys = JSON.parse(localStorage.getItem('kitchenSurveys')) || [];
+            const newSurvey = {
+                id: "SRV-" + Date.now(),
+                nama: user.nama,
+                email: user.email,
+                rating: rating.value,
+                komentar: komentar,
+                menuSaran: menuSaran,
+                date: new Date().toLocaleDateString('id-ID', { 
+                    day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' 
+                })
+            };
+
+            surveys.push(newSurvey);
+            localStorage.setItem('kitchenSurveys', JSON.stringify(surveys));
+
+            // Tampilkan Modal
+            setTimeout(() => {
+                document.getElementById('modal-thanks').classList.replace('hidden', 'flex');
+            }, 1000);
+        }
+    </script>
+</body>
+</html>
